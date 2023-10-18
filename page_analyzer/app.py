@@ -5,6 +5,7 @@ from flask import (
     flash,
     redirect,
     url_for,
+    Response
 )
 import psycopg2
 from flask_wtf import FlaskForm
@@ -171,3 +172,12 @@ def urls_slug_get(slug):
     return render_template(
         "url.html", url_id=url_id, url_name=url_name, created_at=created_at
     )
+
+@app.route("/logs", methods=['GET'])
+def get_logs():
+    try:
+        with open("app.log", "r") as log_file:
+            content = log_file.read()
+            return Response(content, content_type="text/plain; charset=utf-8")
+    except Exception as e:
+        return f"An error occurred: {e}", 500
