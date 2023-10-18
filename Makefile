@@ -1,11 +1,23 @@
 install:
 	poetry install
 
-dev:
-	poetry run flask --app page_analyzer:app run
+gr:
+	chmod +x ./build.sh && chmod +x ./dev-build.sh && chmod +x ./dev-build-render-db.sh
 
-debug:
-	poetry run flask --app page_analyzer:app --debug run 
+build:
+	./build.sh
+
+dev-build:
+	./dev-build.sh
+
+dev-build-render-db:
+	./dev-build-render-db.sh
+
+start-dev-local:
+	poetry run flask --app page_analyzer:app run --debug --port 5000 --host 127.0.0.1 
+
+start-dev-external:
+	poetry run flask --app page_analyzer:app run --debug --port 5000 --host 0.0.0.0
 
 lint:
 	poetry run flake8 page_analyzer/ --count --select=E9,F63,F7,F82 --show-source --statistics

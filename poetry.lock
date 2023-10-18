@@ -26,14 +26,6 @@ optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 
 [[package]]
-name = "dotenv"
-version = "0.0.5"
-description = "Handle .env files"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "flake8"
 version = "6.1.0"
 description = "the modular source code checker: pep8 pyflakes and co"
@@ -169,6 +161,17 @@ optional = false
 python-versions = ">=3.8"
 
 [[package]]
+name = "python-dotenv"
+version = "1.0.0"
+description = "Read key-value pairs from a .env file and set them as environment variables"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.extras]
+cli = ["click (>=5.0)"]
+
+[[package]]
 name = "werkzeug"
 version = "3.0.0"
 description = "The comprehensive WSGI web application library."
@@ -199,13 +202,12 @@ email = ["email-validator"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "9bc3be79d0b82c765f60cfd5c14ca3cf51009257affffe44061a748ddb886ab2"
+content-hash = "764bfd18db457f542dce663efc433964398d45807c5503c0ab1a66e9d2990d40"
 
 [metadata.files]
 blinker = []
 click = []
 colorama = []
-dotenv = []
 flake8 = []
 flask = []
 flask-wtf = []
@@ -218,5 +220,6 @@ packaging = []
 psycopg2-binary = []
 pycodestyle = []
 pyflakes = []
+python-dotenv = []
 werkzeug = []
 wtforms = []

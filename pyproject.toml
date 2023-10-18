@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "hexlet-code"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "Educational project using Flask, PostgreSQL, and deployment on a PaaS service"
+authors = ["Egor Efimov <odes36@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -10,7 +10,7 @@ Flask = "^3.0.0"
 gunicorn = "^21.2.0"
 psycopg2-binary = "^2.9.9"
 Flask-WTF = "^1.2.1"
-dotenv = "^0.0.5"
+python-dotenv = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^6.1.0"
