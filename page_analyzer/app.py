@@ -5,7 +5,8 @@ from flask import (
     flash,
     redirect,
     url_for,
-    Response
+    Response,
+    request,
 )
 import psycopg2
 from flask_wtf import FlaskForm
@@ -53,7 +54,7 @@ class UrlForm(FlaskForm):
     )
 
 
-class UrlRepository:
+class MyRepository:
     def __init__(self, conn_str):
         self.conn_str = conn_str
 
@@ -80,8 +81,22 @@ class UrlRepository:
         if hasattr(self, "conn") and self.conn:
             self.conn.close()
 
-    def fetch_all_urls(self, offset=0, limit=10):
-        self.cur.execute("SELECT * FROM urls ORDER BY id DESC;")
+    def fetch_to_urls(self):
+        query = """
+            SELECT
+            urls.id,
+            urls.name,
+            MAX(url_checks.created_at) AS latest_check_at
+            FROM
+                urls
+            LEFT JOIN
+                url_checks ON urls.id = url_checks.url_id
+            GROUP BY
+                urls.id, urls.name
+            ORDER BY
+                urls.id;
+        """
+        self.cur.execute(query)
         return self.cur.fetchall()
 
     def fetch_url_id(self, url):
@@ -100,9 +115,21 @@ class UrlRepository:
         )
         return self.cur.fetchone()[0]
 
-    def get_data(self, slug):
-        self.cur.execute("SELECT * FROM urls WHERE id = %s", (slug,))
+    def get_urls_data_by_url_id(self, url_id):
+        self.cur.execute("SELECT * FROM urls WHERE id = %s", (url_id,))
         return self.cur.fetchone()
+
+    def insert_url_check(self, url_id):
+        self.cur.execute(
+            "INSERT INTO url_checks (url_id, created_at) VALUES (%s, NOW())", (url_id,)
+        )
+
+    def get_url_checks(self, url_id):
+        self.cur.execute(
+            "SELECT id, created_at FROM url_checks WHERE url_id = %s ORDER BY created_at DESC",
+            (url_id,),
+        )
+        return self.cur.fetchall()
 
 
 @app.route("/", methods=["GET"])
@@ -118,9 +145,10 @@ def main():
 @app.route("/urls", methods=["GET"])
 def urls_get():
     logging.info("Received GET request on /urls endpoint.")
-    with UrlRepository(conn_str=DATABASE_URL) as repo:
-        db_urls = repo.fetch_all_urls()
+    with MyRepository(conn_str=DATABASE_URL) as repo:
+        db_urls = repo.fetch_to_urls()
     logging.info(f"Retrieved {len(db_urls)} URL from the database.")
+    logging.info(f"Variables for urls.html: db_urls={db_urls}")
     return render_template("urls.html", db_urls=db_urls)
 
 
@@ -128,52 +156,72 @@ def urls_get():
 def urls_post():
     logging.info("Received POST request on /urls endpoint.")
     form = UrlForm()
-    full_url = form.data.get("name")
-    
+    full_url = form.data.get("name").lower()
     parsed_url = urlparse(full_url)
-    base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
-    
+    netloc = parsed_url.netloc
+    if netloc.startswith("www."):
+        netloc = netloc[4:]
+    base_url = f"{parsed_url.scheme}://{netloc}"
+
     if not form.validate_on_submit():
-        logging.warning(f"Form validation failed for URL: {base_url}. Errors: {form.errors}")
+        logging.warning(
+            f"Form validation failed for URL: {base_url}. Errors: {form.errors}"
+        )
         for field, errors in form.errors.items():
             for error in errors:
                 flash(error, "danger")
         return redirect(url_for("main"))
 
-    with UrlRepository(conn_str=DATABASE_URL) as repo:
+    with MyRepository(conn_str=DATABASE_URL) as repo:
         if repo.url_exists(base_url):
             logging.info(f"URL {base_url} already exists in the database.")
             url_id = repo.fetch_url_id(base_url)
             if url_id:
                 flash("Страница уже существует", "info")
-                return redirect(url_for("urls_slug_get", slug=url_id))
+                return redirect(url_for("urls_url_id_get", url_id=url_id))
 
         new_url_id = repo.insert_url(base_url)
         logging.info(f"Inserted new URL {base_url} with ID: {new_url_id}.")
         flash("Страница успешно добавлена", "success")
-        return redirect(url_for("urls_slug_get", slug=new_url_id))
+        return redirect(url_for("urls_url_id_get", url_id=new_url_id))
 
 
-
-@app.route("/urls/<int:slug>", methods=["GET"])
-def urls_slug_get(slug):
-    logging.info(f"Received GET request on /urls/{slug} endpoint.")
-    with UrlRepository(conn_str=DATABASE_URL) as repo:
-        db_urls = repo.get_data(slug)
-    logging.info(f"Retrieved URL data for slug {slug}: {db_urls}")
-
+@app.route("/urls/<int:url_id>", methods=["GET"])
+def urls_url_id_get(url_id):
+    logging.info(f"Received GET request on /urls/{url_id} endpoint.")
+    with MyRepository(conn_str=DATABASE_URL) as repo:
+        db_urls = repo.get_urls_data_by_url_id(url_id)
+        checks = repo.get_url_checks(url_id)
+    logging.info(f"Retrieved URL data for url_id {url_id}: {db_urls}")
     if not db_urls:
-        logging.warning(f"URL for slug {slug} not found.")
+        logging.warning(f"URL for url_id {url_id} not found.")
         flash("URL not found.", "info")
         return redirect(url_for("main"))
-
     url_id, url_name, created_at = db_urls
-    created_at = created_at.strftime("%Y-%m-%d")
+    created_at = created_at.date()
+    logging.info(
+        f"Variables for url.html: url_id={url_id}, url_name={url_name}, created_at={created_at}, checks={checks}"
+    )
     return render_template(
-        "url.html", url_id=url_id, url_name=url_name, created_at=created_at
+        "url.html",
+        url_id=url_id,
+        url_name=url_name,
+        created_at=created_at,
+        checks=checks,
     )
 
-@app.route("/logs", methods=['GET'])
+
+@app.route("/urls/<int:url_id>/checks", methods=["POST"])
+def post_url_checks(url_id):
+    print(f"url_id is {url_id}")
+    logging.info(f"Received POST request on /urls/{url_id}/checks endpoint.")
+    with MyRepository(conn_str=DATABASE_URL) as repo:
+        repo.insert_url_check(url_id)
+    flash("Страница успешно проверена", "success")
+    return redirect(url_for("urls_url_id_get", url_id=url_id))
+
+
+@app.route("/logs", methods=["GET"])
 def get_logs():
     try:
         with open("app.log", "r") as log_file:

@@ -16,14 +16,22 @@
     </tr>
     </thead>
     <tbody>
-      {% for item in db_urls %}
+      {% for urls_id, urls_name, latest_check_at in db_urls %}
         <tr>
-            <td>{{ item[0] }}</td>
-            <td><a href="/urls/{{ item[0] }}">{{ item[1] }}</a></td>
-            <td>{{ item[2] }}</td>
-            <td>N/A</td>    
+            <td>{{ urls_id }}</td>
+            <td><a href="/urls/{{ urls_id }}">{{ urls_name }}</a></td>
+            {% if latest_check_at %}
+            <td>{{ latest_check_at.date() }}</td>
+            {% else %}
+            <td></td>
+            {% endif %}
+            <!-- {% if status_check %}
+            <td>{{ status_check }}</td>
+            {% else %}
+            <td></td>
+            {% endif %} -->
+                
         </tr>
-    
       {% endfor %}
     </tbody>
   </table>

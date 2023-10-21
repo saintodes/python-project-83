@@ -5,7 +5,6 @@
     <div class="container-lg mt-3">
       <h1>Сайт: {{ url_name }}</h1>
 
-    
   <div class="table-responsive">
     <table class="table table-bordered table-hover text-nowrap" data-test="url">
       <tbody>
@@ -19,32 +18,48 @@
         </tr>
         <tr>
           <td>Дата создания</td>
-          <td>{{ created_at}}</td>
+          <td>{{ created_at }}</td>
         </tr>
       </tbody>
     </table>
   </div>
 
-    <h2 class="mt-5 mb-3">Проверки</h2>
-    <form method="post" action="/urls/3/checks">
-    <input type="submit" class="btn btn-primary" value="Запустить проверку">
-    </form>
-    
+  <h2 class="mt-5 mb-3">Проверки</h2>
+  <form method="post" action="{{ url_for('post_url_checks', url_id=url_id) }}">
+  <input type="submit" class="btn btn-primary" value="Запустить проверку">
+  </form>
+  
   <div>
-    <table class="table table-bordered table-hover mt-2" data-test="checks">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Код ответа</th>
-        <th>h1</th>
-        <th>title</th>
-        <th>description</th>
-        <th>Дата создания</th>
-      </tr>
-    </thead>
+      <table class="table table-bordered table-hover mt-2" data-test="checks">
+      <thead>
+          <tr>
+              <th>ID</th>
+              <th>Код ответа</th>
+              <th>h1</th>
+              <th>title</th>
+              <th>description</th>
+              <th>Дата создания</th>
+          </tr>
+      </thead>
       <tbody>
-    </tbody>
-    </table>
+          {% if checks %}
+              {% for check in checks %}
+                  <tr>
+                      <td>{{ check[0] }}</td>
+                      <td> check.status_code</td>
+                      <td> check.h1 </td>
+                      <td> check.title </td>
+                      <td> check.description </td>
+                      <td>{{ check[1].date() }}</td>
+                  </tr>
+              {% endfor %}
+          {% else %}
+              <tr>
+                  <td colspan="6" class="text-center">Нет данных</td>
+              </tr>
+          {% endif %}
+      </tbody>
+      </table>
   </div>
     </div>
 </main>
