@@ -16,7 +16,7 @@
     </tr>
     </thead>
     <tbody>
-      {% for urls_id, urls_name, latest_check_at in db_urls %}
+      {% for urls_id, urls_name, latest_check_at, status_code in db_urls %}
         <tr>
             <td>{{ urls_id }}</td>
             <td><a href="/urls/{{ urls_id }}">{{ urls_name }}</a></td>
@@ -25,11 +25,11 @@
             {% else %}
             <td></td>
             {% endif %}
-            <!-- {% if status_check %}
-            <td>{{ status_check }}</td>
+            {% if status_code %}
+            <td>{{ status_code }}</td>
             {% else %}
             <td></td>
-            {% endif %} -->
+            {% endif %}
                 
         </tr>
       {% endfor %}

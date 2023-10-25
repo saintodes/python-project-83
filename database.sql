@@ -1,12 +1,11 @@
-DROP TABLE IF EXISTS urls;
+DROP TABLE IF EXISTS url_checks CASCADE;
+DROP TABLE IF EXISTS urls CASCADE;
 
 CREATE TABLE urls (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) UNIQUE NOT NULL,
   created_at timestamp
 );
-
-DROP TABLE IF EXISTS url_checks;
 
 CREATE TABLE url_checks (
   id SERIAL PRIMARY KEY,
@@ -16,4 +15,4 @@ CREATE TABLE url_checks (
   title text,
   description text,
   created_at timestamp
-)
+);

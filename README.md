@@ -7,4 +7,4 @@
 
   
 
-[Try page analyzer](https://page-analyzer-mmny.onrender.com/) 
+[Try page analyzer](https://page-analyzer-jhv6.onrender.com/) 

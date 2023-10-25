@@ -11,6 +11,8 @@ gunicorn = "^21.2.0"
 psycopg2-binary = "^2.9.9"
 Flask-WTF = "^1.2.1"
 python-dotenv = "^1.0.0"
+requests = "^2.31.0"
+bs4 = "^0.0.1"
 
 [tool.poetry.dev-dependencies]
 flake8 = "^6.1.0"

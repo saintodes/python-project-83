@@ -6,9 +6,9 @@ from flask import (
     redirect,
     url_for,
     Response,
-    request,
 )
-import psycopg2
+
+
 from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import InputRequired, Length, URL
@@ -16,7 +16,9 @@ from urllib.parse import urlparse
 import os
 from dotenv import load_dotenv
 import logging
-
+from .repo import DatabaseRepository
+import requests
+from bs4 import BeautifulSoup
 
 logging.basicConfig(
     filename="app.log", level=logging.INFO, format="%(asctime)s - %(message)s"
@@ -43,7 +45,7 @@ else:
     logging.error("Failed to retrieve DATABASE_URL from environment variables.")
 
 
-class UrlForm(FlaskForm):
+class UrlInputForm(FlaskForm):
     name = StringField(
         "",
         validators=[
@@ -54,88 +56,40 @@ class UrlForm(FlaskForm):
     )
 
 
-class MyRepository:
-    def __init__(self, conn_str):
-        self.conn_str = conn_str
+def make_check(url):
+    try:
+        url_response = requests.get(url)
+        content = url_response.text
+        status_code = url_response.status_code
+        soup = BeautifulSoup(content, "html.parser")
 
-    def __enter__(self):
-        try:
-            self.conn = psycopg2.connect(self.conn_str)
-            self.cur = self.conn.cursor()
-            return self
-        except Exception as e:
-            logging.error(f"Error connecting to database: {e}")
-            raise e
+        h1 = soup.find("h1")
+        h1 = h1.text.strip() if h1 else "Не найден"
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is None:
-            self.conn.commit()
-        else:
-            self.conn.rollback()
-        self.cur.close()
-        self.conn.close()
+        title = soup.title
+        title = title.text.strip() if title else "Не найден"
 
-    def close(self):
-        if hasattr(self, "cur") and self.cur:
-            self.cur.close()
-        if hasattr(self, "conn") and self.conn:
-            self.conn.close()
-
-    def fetch_to_urls(self):
-        query = """
-            SELECT
-            urls.id,
-            urls.name,
-            MAX(url_checks.created_at) AS latest_check_at
-            FROM
-                urls
-            LEFT JOIN
-                url_checks ON urls.id = url_checks.url_id
-            GROUP BY
-                urls.id, urls.name
-            ORDER BY
-                urls.id;
-        """
-        self.cur.execute(query)
-        return self.cur.fetchall()
-
-    def fetch_url_id(self, url):
-        self.cur.execute("SELECT id FROM urls WHERE name = %s", (url,))
-        row = self.cur.fetchone()
-        return row[0] if row else None
-
-    def url_exists(self, url):
-        self.cur.execute("SELECT * FROM urls WHERE name = %s", (url,))
-        return self.cur.fetchone() is not None
-
-    def insert_url(self, url):
-        self.cur.execute(
-            "INSERT INTO urls (name, created_at) VALUES (%s, NOW()) RETURNING id",
-            (url,),
-        )
-        return self.cur.fetchone()[0]
-
-    def get_urls_data_by_url_id(self, url_id):
-        self.cur.execute("SELECT * FROM urls WHERE id = %s", (url_id,))
-        return self.cur.fetchone()
-
-    def insert_url_check(self, url_id):
-        self.cur.execute(
-            "INSERT INTO url_checks (url_id, created_at) VALUES (%s, NOW())", (url_id,)
+        description = soup.find("meta", attrs={"name": "description"})
+        description = (
+            description.get("content", "").strip() if description else "Не найден"
         )
 
-    def get_url_checks(self, url_id):
-        self.cur.execute(
-            "SELECT id, created_at FROM url_checks WHERE url_id = %s ORDER BY created_at DESC",
-            (url_id,),
-        )
-        return self.cur.fetchall()
+        logging.info(f"{url} was checked with status code {status_code}")
+        return {
+            "status_code": status_code,
+            "h1": h1,
+            "title": title,
+            "description": description,
+        }
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Connection error while accessing {url}: {e}")
+        return {"status_code": 500, "error": str(e)}
 
 
 @app.route("/", methods=["GET"])
 def main():
     logging.info("Received GET request on main endpoint.")
-    form = UrlForm()
+    form = UrlInputForm()
     messages = get_flashed_messages(with_categories=True)
     if messages:
         logging.info(f"Flashed messages: {messages}")
@@ -145,8 +99,8 @@ def main():
 @app.route("/urls", methods=["GET"])
 def urls_get():
     logging.info("Received GET request on /urls endpoint.")
-    with MyRepository(conn_str=DATABASE_URL) as repo:
-        db_urls = repo.fetch_to_urls()
+    with DatabaseRepository(conn_str=DATABASE_URL) as repo:
+        db_urls = repo.fetch_latest_url_data()
     logging.info(f"Retrieved {len(db_urls)} URL from the database.")
     logging.info(f"Variables for urls.html: db_urls={db_urls}")
     return render_template("urls.html", db_urls=db_urls)
@@ -155,7 +109,7 @@ def urls_get():
 @app.route("/urls", methods=["POST"])
 def urls_post():
     logging.info("Received POST request on /urls endpoint.")
-    form = UrlForm()
+    form = UrlInputForm()
     full_url = form.data.get("name").lower()
     parsed_url = urlparse(full_url)
     netloc = parsed_url.netloc
@@ -172,7 +126,7 @@ def urls_post():
                 flash(error, "danger")
         return redirect(url_for("main"))
 
-    with MyRepository(conn_str=DATABASE_URL) as repo:
+    with DatabaseRepository(conn_str=DATABASE_URL) as repo:
         if repo.url_exists(base_url):
             logging.info(f"URL {base_url} already exists in the database.")
             url_id = repo.fetch_url_id(base_url)
@@ -189,8 +143,8 @@ def urls_post():
 @app.route("/urls/<int:url_id>", methods=["GET"])
 def urls_url_id_get(url_id):
     logging.info(f"Received GET request on /urls/{url_id} endpoint.")
-    with MyRepository(conn_str=DATABASE_URL) as repo:
-        db_urls = repo.get_urls_data_by_url_id(url_id)
+    with DatabaseRepository(conn_str=DATABASE_URL) as repo:
+        db_urls = repo.get_url_data(url_id)
         checks = repo.get_url_checks(url_id)
     logging.info(f"Retrieved URL data for url_id {url_id}: {db_urls}")
     if not db_urls:
@@ -213,19 +167,24 @@ def urls_url_id_get(url_id):
 
 @app.route("/urls/<int:url_id>/checks", methods=["POST"])
 def post_url_checks(url_id):
-    print(f"url_id is {url_id}")
     logging.info(f"Received POST request on /urls/{url_id}/checks endpoint.")
-    with MyRepository(conn_str=DATABASE_URL) as repo:
-        repo.insert_url_check(url_id)
-    flash("Страница успешно проверена", "success")
-    return redirect(url_for("urls_url_id_get", url_id=url_id))
+    with DatabaseRepository(conn_str=DATABASE_URL) as repo:
+        check_results = make_check(repo.get_url_name_by_id(url_id))
+        if check_results["status_code"] != 500:
+            repo.insert_url_check(url_id, check_results)
+            logging.info("Url check success")
+            flash("Страница успешно проверена", "info")
+            return redirect(url_for("urls_url_id_get", url_id=url_id))
+        logging.error(f'Url check failed. error: {check_results["error"]} ')
+        flash("Произошла ошибка при проверке", "warning")
+        return redirect(url_for("urls_url_id_get", url_id=url_id))
 
 
-@app.route("/logs", methods=["GET"])
-def get_logs():
-    try:
-        with open("app.log", "r") as log_file:
-            content = log_file.read()
-            return Response(content, content_type="text/plain; charset=utf-8")
-    except Exception as e:
-        return f"An error occurred: {e}", 500
+# @app.route("/logs", methods=["GET"])
+# def get_logs():
+#     try:
+#         with open("app.log", "r") as log_file:
+#             content = log_file.read()
+#             return Response(content, content_type="text/plain; charset=utf-8")
+#     except Exception as e:
+#         return f"An error occurred: {e}", 500
