@@ -3,11 +3,12 @@ name = "hexlet-code"
 version = "0.1.0"
 description = "Educational project using Flask, PostgreSQL, and deployment on a PaaS service"
 authors = ["Egor Efimov <odes36@gmail.com>"]
+packages = [{include = "page_analyzer"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 Flask = "^3.0.0"
-gunicorn = "^21.2.0"
+gunicorn = "^20.1.0"
 psycopg2-binary = "^2.9.9"
 Flask-WTF = "^1.2.1"
 python-dotenv = "^1.0.0"
