@@ -8,6 +8,8 @@ from wtforms.validators import InputRequired, Length, URL
 from .repo import DatabaseRepository
 from .service import UrlService
 
+# Load environment variables from .env file
+load_dotenv_status = load_dotenv(override=True)
 
 # Constants
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -18,7 +20,6 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 service = UrlService(repo=DatabaseRepository(conn_str=DATABASE_URL))
-load_dotenv_status = load_dotenv(override=True)
 
 
 # Form Definitions
