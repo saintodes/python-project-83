@@ -2,22 +2,22 @@
 
 {% block main_content %}
 <main class="flex-grow-1">
-    <div class="container-lg mt-3">
-      <h1>Сайты</h1>
+  <div class="container-lg mt-3">
+    <h1>Сайты</h1>
 
-<div class="table-responsive">
-  <table class="table table-bordered table-hover text-nowrap" data-test="urls">
-    <thead>
-    <tr>
-      <th>ID</th>
-      <th>Имя</th>
-      <th>Последняя проверка</th>
-      <th>Код ответа</th>
-    </tr>
-    </thead>
-    <tbody>
-      {% for urls_id, urls_name, latest_check_at, status_code in db_urls %}
-        <tr>
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover text-nowrap" data-test="urls">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Последняя проверка</th>
+            <th>Код ответа</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for urls_id, urls_name, latest_check_at, status_code in url_data %}
+          <tr>
             <td>{{ urls_id }}</td>
             <td><a href="/urls/{{ urls_id }}">{{ urls_name }}</a></td>
             {% if latest_check_at %}
@@ -30,13 +30,13 @@
             {% else %}
             <td></td>
             {% endif %}
-                
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
 
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-  </main>
+
+  </div>
+</main>
 {% endblock %}
