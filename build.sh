@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-#Build this .sh while deploying on render.com
-
 if [[ -f ./.env ]]; then
     source ./.env
 else
