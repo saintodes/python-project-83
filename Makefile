@@ -28,3 +28,12 @@ lint:
 PORT ?= 8000
 start:
 	poetry run gunicorn -w 5 -b 0.0.0.0:$(PORT) page_analyzer:app
+
+drop-table:
+	udo -u postgres psql -c "DROP DATABASE IF EXISTS dev_database;"
+
+drop-role:
+	sudo -u postgres psql -c "DROP ROLE IF EXISTS dev_db_user;"
+
+start-local:
+	poetry run gunicorn -w 5 -b 127.0.0.1:8000 page_analyzer:app

@@ -38,10 +38,10 @@ class UrlService:
         return self.repo.get_url_checks(url_id)
 
     def get_id_url_if_exists(self, url: str) -> int:
-        return self.repo.fetch_url_id(url)
+        return self.repo.get_url_id_by_name(url)
 
-    def insert_url(self, url: str) -> None:
-        return self.repo.insert_url(url)
+    def insert_url_and_return_id(self, url: str) -> None:
+        return self.repo.insert_url_and_return_id(url)
 
     def fetch_lastest_url_data(self) -> Dict:
         return self.repo.fetch_latest_url_data()

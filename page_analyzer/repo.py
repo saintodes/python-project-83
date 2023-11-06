@@ -1,61 +1,61 @@
-import psycopg2
+from psycopg2 import pool
+import os
+from dotenv import load_dotenv
+
+
+# Initialize the connection pool
+load_dotenv_status = load_dotenv(override=True)
+DATABASE_URL = os.getenv("DATABASE_URL")
+connection_pool = pool.SimpleConnectionPool(minconn=1, maxconn=10, dsn=DATABASE_URL)
 
 
 class DatabaseRepository:
-    def __init__(self, conn_str):
-        self.conn_str = conn_str
-        self._initialize_connection_and_cursor()
-
-    def __del__(self):
-        self.close()
-
     # Connection Management
+    def _get_connection(self):
+        return connection_pool.getconn()
 
-    def _initialize_connection_and_cursor(self):
-        self.conn = psycopg2.connect(self.conn_str)
-        self.cur = self.conn.cursor()
-
-    def close(self):
-        if hasattr(self, "cur") and self.cur:
-            self.cur.close()
-        if hasattr(self, "conn") and self.conn:
-            self.conn.close()
-
-    # Internal Helper Methods
+    def _release_connection(self, conn):
+        connection_pool.putconn(conn)
 
     def _execute_query(self, query, values=None):
+        conn = self._get_connection()
         try:
-            if values:
-                self.cur.execute(query, values)
-            else:
-                self.cur.execute(query)
-            self.conn.commit()
+            with conn.cursor() as cur:
+                cur.execute(query, values)
+                conn.commit()
+                # Fetchall if we've got any
+                if cur.description:
+                    return cur.fetchall()
         except Exception as error:
-            self.conn.rollback()
+            conn.rollback()
             raise error
+        finally:
+            self._release_connection(conn)
+
+    def close_connection_pool(self):
+        connection_pool.closeall()
 
     # URL Methods
 
-    def fetch_url_id(self, url):
+    def get_url_id_by_name(self, url):
         query = "SELECT id FROM urls WHERE name = %s"
-        self._execute_query(query, (url,))
-        row = self.cur.fetchone()
-        return row[0] if row else None
+        rows = self._execute_query(query, (url,))
+        return rows[0][0] if rows else None
 
-    def insert_url(self, url):
+    def insert_url_and_return_id(self, url):
         query = "INSERT INTO urls (name, created_at) VALUES (%s, NOW()) RETURNING id"
-        self._execute_query(query, (url,))
-        return self.cur.fetchone()[0]
+        rows = self._execute_query(query, (url,))
+        return rows[0][0] if rows else None
 
     def get_url_data(self, url_id):
         query = "SELECT * FROM urls WHERE id = %s"
-        self._execute_query(query, (url_id,))
-        return self.cur.fetchone()
+        rows = self._execute_query(query, (url_id,))
+        return rows[0] if rows else None
 
     def get_url_name_by_id(self, url_id):
         query = "SELECT name FROM urls WHERE id = %s"
-        self._execute_query(query, (url_id,))
-        return self.cur.fetchone()[0]
+        rows = self._execute_query(query, (url_id,))
+        return rows[0][0] if rows else None
 
     # URL Checks Methods
 
@@ -80,8 +80,7 @@ class DatabaseRepository:
             WHERE url_id = %s
             ORDER BY created_at DESC;
         """
-        self._execute_query(query, (url_id,))
-        return self.cur.fetchall()
+        return self._execute_query(query, (url_id,))
 
     # Aggregate Data Methods
 
@@ -108,5 +107,4 @@ class DatabaseRepository:
         ORDER BY
             urls.id;
         """
-        self._execute_query(query)
-        return self.cur.fetchall()
+        return self._execute_query(query)

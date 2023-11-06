@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # Flask Configuration and Initialization
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
-service = UrlService(repo=DatabaseRepository(conn_str=DATABASE_URL))
+service = UrlService(repo=DatabaseRepository())
 
 
 # Form Definitions
@@ -93,7 +93,7 @@ def _handle_valid_form_submission(form):
     if url_id:
         flash("Страница уже существует", "info")
     else:
-        url_id = service.insert_url(url)
+        url_id = service.insert_url_and_return_id(url)
         flash("Страница успешно добавлена", "success")
     return redirect(url_for("get_url_by_id", url_id=url_id))
 
