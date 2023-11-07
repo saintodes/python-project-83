@@ -24,7 +24,7 @@ service = UrlService(repo=DatabaseRepository(conn_str=DATABASE_URL))
 
 # Form Definitions
 class UrlInputForm(FlaskForm):
-    name = StringField(
+    url = StringField(
         "",
         validators=[
             InputRequired(),
@@ -88,7 +88,7 @@ def post_url_checks(url_id):
 
 
 def _handle_valid_form_submission(form):
-    url = service.parse_and_serialize_form(form.data.get("name"))
+    url = service.parse_and_serialize_form(form.data.get("url"))
     url_id = service.get_id_url_if_exists(url)
     if url_id:
         flash("Страница уже существует", "info")
