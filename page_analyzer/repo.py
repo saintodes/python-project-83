@@ -1,21 +1,17 @@
 from psycopg2 import pool
-import os
-from dotenv import load_dotenv
-
-
-# Initialize the connection pool
-load_dotenv_status = load_dotenv(override=True)
-DATABASE_URL = os.getenv("DATABASE_URL")
-connection_pool = pool.SimpleConnectionPool(minconn=1, maxconn=10, dsn=DATABASE_URL)
 
 
 class DatabaseRepository:
+    def __init__(self, conn_str):
+        self.conn_str = conn_str
+        self.connection_pool = pool.SimpleConnectionPool(minconn=1, maxconn=1, dsn=self.conn_str)
+
     # Connection Management
     def _get_connection(self):
-        return connection_pool.getconn()
+        return self.connection_pool.getconn()
 
     def _release_connection(self, conn):
-        connection_pool.putconn(conn)
+        self.connection_pool.putconn(conn)
 
     def _execute_query(self, query, values=None):
         conn = self._get_connection()
@@ -33,7 +29,7 @@ class DatabaseRepository:
             self._release_connection(conn)
 
     def close_connection_pool(self):
-        connection_pool.closeall()
+        self.connection_pool.closeall()
 
     # URL Methods
 

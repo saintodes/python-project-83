@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # Flask Configuration and Initialization
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
-service = UrlService(repo=DatabaseRepository())
+service = UrlService(repo=DatabaseRepository(conn_str=DATABASE_URL))
 
 
 # Form Definitions
