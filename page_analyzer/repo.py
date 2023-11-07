@@ -4,7 +4,7 @@ from psycopg2 import pool
 class DatabaseRepository:
     def __init__(self, conn_str):
         self.conn_str = conn_str
-        self.connection_pool = pool.SimpleConnectionPool(minconn=1, maxconn=1, dsn=self.conn_str)
+        self.connection_pool = pool.SimpleConnectionPool(minconn=1, maxconn=10, dsn=self.conn_str)
 
     # Connection Management
     def _get_connection(self):
