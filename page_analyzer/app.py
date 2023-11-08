@@ -102,4 +102,4 @@ def _handle_invalid_form_submission(form):
     for _, errors in form.errors.items():
         for error in errors:
             flash(error, "danger")
-    return redirect(url_for("main"))
+    return render_template("main.html", form=form), 422

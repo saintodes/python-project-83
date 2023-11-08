@@ -11,15 +11,6 @@
                 {{ form.url.label }}
                 {{ form.url }}
                 <input type="submit" class="btn btn-primary btn-lg ms-3 px-5 text-uppercase mx-3" value="Проверить">
-
-                {% if form.url.errors %}
-                <ul class="errors">
-                    {% for error in form.url.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-
             </form>
         </div>
     </div>
