@@ -78,7 +78,7 @@ def get_url_by_id(url_id):
 def post_url_checks(url_id):
     check_results = service.fetch_and_store_web_content(url_id=url_id)
     if "error" in check_results:
-        flash("Произошла ошибка при проверке", "warning")
+        flash("Произошла ошибка при проверке", "danger")
     else:
         flash("Страница успешно проверена", "info")
     return redirect(url_for("get_url_by_id", url_id=url_id))
