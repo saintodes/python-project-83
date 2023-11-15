@@ -50,6 +50,7 @@ class UrlService:
 
     def _get_web_content(self, url: str) -> Tuple[str, int]:
         url_response = requests.get(url)
+        url_response.raise_for_status()
         return url_response.text, url_response.status_code
 
     def _parse_web_content(self, content: str) -> Dict[str, str]:
