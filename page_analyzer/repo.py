@@ -4,7 +4,9 @@ from psycopg2 import pool
 class DatabaseRepository:
     def __init__(self, conn_str):
         self.conn_str = conn_str
-        self.connection_pool = pool.SimpleConnectionPool(minconn=1, maxconn=10, dsn=self.conn_str)
+        self.connection_pool = pool.SimpleConnectionPool(
+            minconn=1, maxconn=10, dsn=self.conn_str
+        )
 
     # Connection Management
     def _get_connection(self):
@@ -83,23 +85,23 @@ class DatabaseRepository:
     def fetch_latest_url_data(self):
         query = """
         SELECT
-        urls.id,
-        urls.name,
-        latest_checks.latest_check_at,
-        url_checks.status_code
+            urls.id,
+            urls.name,
+            latest_checks.latest_check_at,
+            latest_checks.status_code
         FROM
             urls
-        LEFT JOIN (
-            SELECT
-                url_id,
-                MAX(created_at) AS latest_check_at
-            FROM
-                url_checks
-            GROUP BY
-                url_id
-        ) AS latest_checks ON urls.id = latest_checks.url_id
         LEFT JOIN
-            url_checks ON urls.id = url_checks.url_id AND latest_checks.latest_check_at = url_checks.created_at
+            (
+                SELECT
+                    url_id,
+                    MAX(created_at) AS latest_check_at,
+                    status_code
+                FROM
+                    url_checks
+                GROUP BY
+                    url_id, status_code
+            ) AS latest_checks ON urls.id = latest_checks.url_id
         ORDER BY
             urls.id;
         """
