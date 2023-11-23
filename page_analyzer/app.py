@@ -6,7 +6,7 @@ from wtforms import StringField
 from wtforms.validators import InputRequired, Length, URL
 
 from .repo import DatabaseRepository
-from .service import UrlService
+from .url_service import UrlService
 
 # Load environment variables from .env file
 load_dotenv_status = load_dotenv(override=True)
