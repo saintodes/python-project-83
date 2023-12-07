@@ -85,24 +85,17 @@ class DatabaseRepository:
     def fetch_latest_url_data(self):
         query = """
         SELECT
-            urls.id,
-            urls.name,
-            latest_checks.latest_check_at,
-            latest_checks.status_code
+          urls.id,
+          urls.name,
+          MAX(url_checks.created_at) AS last_check_time,
+          url_checks.status_code
         FROM
-            urls
-        LEFT JOIN
-            (
-                SELECT
-                    url_id,
-                    MAX(created_at) AS latest_check_at,
-                    status_code
-                FROM
-                    url_checks
-                GROUP BY
-                    url_id, status_code
-            ) AS latest_checks ON urls.id = latest_checks.url_id
+          urls
+          LEFT JOIN url_checks ON urls.id = url_checks.url_id
+        GROUP BY
+          urls.id,
+          url_checks.status_code
         ORDER BY
-            urls.id;
+          urls.id DESC;
         """
         return self._execute_query(query)
