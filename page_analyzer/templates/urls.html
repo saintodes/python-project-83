@@ -16,27 +16,25 @@
           </tr>
         </thead>
         <tbody>
-          {% for urls_id, urls_name, latest_check_at, status_code in url_data %}
+          {% for url in url_data %}
           <tr>
-            <td>{{ urls_id }}</td>
-            <td><a href="/urls/{{ urls_id }}">{{ urls_name }}</a></td>
-            {% if latest_check_at %}
-            <td>{{ latest_check_at.date() }}</td>
+            <td>{{ url.url_id }}</td>
+            <td><a href="/urls/{{ url.url_id }}">{{ url.url_name }}</a></td>
+            {% if url.latest_check_date %}
+            <td>{{ url.latest_check_date }}</td>
             {% else %}
             <td></td>
             {% endif %}
-            {% if status_code %}
-            <td>{{ status_code }}</td>
+            {% if url.status_code %}
+            <td>{{ url.status_code }}</td>
             {% else %}
             <td></td>
             {% endif %}
-
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-
   </div>
 </main>
 {% endblock %}

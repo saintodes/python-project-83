@@ -82,20 +82,25 @@ class DatabaseRepository:
 
     # Aggregate Data Methods
 
-    def fetch_latest_url_data(self):
+    def fetch_basic_url_data(self):
         query = """
         SELECT
-          urls.id,
-          urls.name,
-          MAX(url_checks.created_at) AS last_check_time,
-          url_checks.status_code
+            urls.id,
+            urls.name
         FROM
-          urls
-          LEFT JOIN url_checks ON urls.id = url_checks.url_id
+            urls;
+        """
+        return self._execute_query(query)
+
+    def fetch_latest_checks(self):
+        query = """
+        SELECT
+            url_id,
+            MAX(created_at) AS latest_check_at,
+            status_code
+        FROM
+            url_checks
         GROUP BY
-          urls.id,
-          url_checks.status_code
-        ORDER BY
-          urls.id DESC;
+            url_id, status_code;
         """
         return self._execute_query(query)

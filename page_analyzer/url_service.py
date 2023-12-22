@@ -43,8 +43,11 @@ class UrlService:
     def insert_url_and_return_id(self, url: str) -> None:
         return self.repo.insert_url_and_return_id(url)
 
-    def fetch_lastest_url_data(self) -> Dict:
-        return self.repo.fetch_latest_url_data()
+    def fetch_basic_url_data(self) -> list:
+        return self.repo.fetch_basic_url_data()
+
+    def fetch_latest_checks(self) -> list:
+        return self.repo.fetch_latest_checks()
 
     # Helper Methods
 
