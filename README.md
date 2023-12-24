@@ -39,7 +39,12 @@ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poet
 ```
 Or follow the instructions on the [official Poetry website](https://python-poetry.org/docs/)
 
-Once you have Poetry installed, you can set up the project using the following steps:
+Also you need Postgres client. Install it with next command:
+```bash
+sudo apt install postgresql
+'''
+
+Once you have Poetry and Postgres installed, you can set up the project using the following steps:
 
 1. Clone the repository:
 ```bash
