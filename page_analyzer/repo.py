@@ -94,12 +94,13 @@ class DatabaseRepository:
 
     def fetch_latest_checks(self):
         query = """
-        SELECT 
-            DISTINCT ON (url_id) * 
-        FROM 
-            url_checks 
-        ORDER BY 
-            url_id DESC, 
-            created_at ASC;
+        SELECT
+            url_id,
+            MAX(created_at) AS latest_check_at,
+            status_code
+        FROM
+            url_checks
+        GROUP BY
+            url_id, status_code;
         """
         return self._execute_query(query)
