@@ -28,6 +28,29 @@ class UrlService:
             self.repo.insert_url_check(url_id, check_results)
 
         return check_results
+    
+    def get_combined_url_data(self) -> List[Dict]:
+        basic_url_data = self.fetch_basic_url_data()
+        basic_url_dict = {url[0]: url[1] for url in basic_url_data}
+        latest_checks_data = self.fetch_latest_checks()
+        latest_checks_dict = {
+            check[0]: {"date": check[1], "status_code": check[2]}
+            for check in latest_checks_data
+        }
+
+        url_data = []
+        for url_id, url_name in basic_url_dict.items():
+            latest_check = latest_checks_dict.get(url_id)
+            if latest_check:
+                url_data.append(
+                    {
+                        "url_id": url_id,
+                        "url_name": url_name,
+                        "latest_check_date": latest_check["date"],
+                        "status_code": latest_check["status_code"],
+                    }
+                )
+        return url_data
 
     # Repository Interaction Methods
 

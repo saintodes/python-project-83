@@ -44,25 +44,7 @@ def main():
 
 @app.route("/urls", methods=["GET"])
 def urls_get():
-    basic_url_data = service.fetch_basic_url_data()
-    basic_url_dict = {url[0]: url[1] for url in basic_url_data}
-    latest_checks_data = service.fetch_latest_checks()
-    latest_checks_dict = {
-        check[0]: {"date": check[1], "status_code": check[2]}
-        for check in latest_checks_data
-    }
-    url_data = []
-    for url_id, url_name in basic_url_dict.items():
-        latest_check = latest_checks_dict.get(url_id)
-        if latest_check:
-            url_data.append(
-                {
-                    "url_id": url_id,
-                    "url_name": url_name,
-                    "latest_check_date": latest_check["date"],
-                    "status_code": latest_check["status_code"],
-                }
-            )
+    url_data = service.get_combined_url_data()
     return render_template("urls.html", url_data=url_data)
 
 
