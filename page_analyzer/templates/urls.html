@@ -21,7 +21,7 @@
             <td>{{ url.url_id }}</td>
             <td><a href="/urls/{{ url.url_id }}">{{ url.url_name }}</a></td>
             {% if url.latest_check_date %}
-            <td>{{ url.latest_check_date }}</td>
+            <td>{{ url.latest_check_date.strftime('%Y-%m-%d') }}
             {% else %}
             <td></td>
             {% endif %}
