@@ -28,7 +28,7 @@ class UrlService:
             self.repo.insert_url_check(url_id, check_results)
 
         return check_results
-    
+
     def get_combined_url_data(self) -> List[Dict]:
         basic_url_data = self.fetch_basic_url_data()
         basic_url_dict = {url[0]: url[1] for url in basic_url_data}
