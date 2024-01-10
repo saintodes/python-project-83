@@ -41,15 +41,14 @@ class UrlService:
         url_data = []
         for url_id, url_name in basic_url_dict.items():
             latest_check = latest_checks_dict.get(url_id)
-            if latest_check:
-                url_data.append(
-                    {
-                        "url_id": url_id,
-                        "url_name": url_name,
-                        "latest_check_date": latest_check["date"],
-                        "status_code": latest_check["status_code"],
-                    }
-                )
+            url_info = {
+                "url_id": url_id,
+                "url_name": url_name,
+                "latest_check_date": latest_check["date"] if latest_check else None,
+                "status_code": latest_check["status_code"] if latest_check else None,
+            }
+            url_data.append(url_info)
+
         return url_data
 
     # Repository Interaction Methods
